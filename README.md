@@ -1,0 +1,2 @@
+# typescript-kuprzus
+Typescript training
