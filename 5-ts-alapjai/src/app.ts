@@ -1,4 +1,3 @@
-/*
 let ertek = "teszt";
 let ertek2 = Math.random();
 let ertek3: Szamok = 42;
@@ -27,7 +26,7 @@ function peldaFuggveny(bemenet: string | number): number {
 }
 
 console.log(peldaFuggveny("szia") *20);
-*/
+
 type Album = {
   userId: number;
   id: number;
