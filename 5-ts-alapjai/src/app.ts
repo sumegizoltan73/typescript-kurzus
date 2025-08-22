@@ -1,3 +1,11 @@
+import type { Album, Photo } from "./teszt";
+import { ajax } from "rxjs/ajax";
+import { forkJoin, map, switchMap, of } from "rxjs";
+
+type Metodus = "Fetch" | "RxJS";
+
+const METODUS: Metodus = "RxJS"; 
+
 let ertek = "teszt";
 let ertek2 = Math.random();
 let ertek3: Szamok = 42;
@@ -27,20 +35,6 @@ function peldaFuggveny(bemenet: string | number): number {
 
 console.log(peldaFuggveny("szia") *20);
 
-type Album = {
-  userId: number;
-  id: number;
-  title: string;
-  photos?: Array<Photo>;
-};
-
-type Photo = {
-  id: number;
-  title: string;
-  url: string;
-  thumbnailUrl: string;
-};
-
 async function getAlbums() {
   const fetchedAlbums = await fetch("http://jsonplaceholder.typicode.com/albums").then(response => {
     return response.json() as Promise<Album[]>;
@@ -56,10 +50,30 @@ async function getAlbums() {
   return albums.map((album, i) => ({...album, photos: allPhotos[i]}));
 }
 
+const albums$ = ajax("http://jsonplaceholder.typicode.com/albums").pipe(
+  map(response => (response.response as Album[]).slice(0,5)),
+  switchMap(albumok => forkJoin([
+    of(albumok),
+    ...albumok.map(album => ajax("http://jsonplaceholder.typicode.com/photos?albumId=" + album.id).pipe(
+      map(response => <Photo[]>response.response)
+    ))
+  ])),
+  map(([albumok, ...allPhotos]) => {
+    return <Album[]>albumok.map((album, i) => ({...album, photos: allPhotos[i]}));
+  })
+);
+
 window.onload = async function () {
-  const albums = await getAlbums() as Album[];
-  
-  render(albums);
+  if (METODUS == "RxJS") {
+    albums$.subscribe(adat => {
+      console.log(adat);
+      render(adat);
+    });
+  }
+  else {
+    const albums = await getAlbums() as Album[];
+    render(albums);
+  }
 }
 
 function render(albumok: Array<Album>){
